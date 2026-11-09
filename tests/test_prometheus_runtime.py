@@ -6,9 +6,9 @@ from pydantic import ValidationError
 
 from app.config import DaytonaSettings
 from app.prometheus_runtime import (
-    configure_agent_tools,
     RunRequest,
     RuntimeSkillContext,
+    configure_agent_tools,
     render_skill_context,
 )
 from app.tool import ToolCollection
@@ -111,9 +111,7 @@ class TestPrometheusRuntimeContext(unittest.TestCase):
     def test_daytona_credentials_are_optional_without_daytona(self):
         self.assertEqual(DaytonaSettings().daytona_api_key, "")
 
-
     def test_unsandboxed_python_tool_is_disabled_by_default(self):
-
         class FakeTool:
             def __init__(self, name):
                 self.name = name
@@ -126,16 +124,13 @@ class TestPrometheusRuntimeContext(unittest.TestCase):
             )
 
         agent = FakeAgent()
-        with patch.dict(
-            "os.environ", {"OPENMANUS_ENABLE_PYTHON_EXECUTION": "0"}
-        ):
+        with patch.dict("os.environ", {"OPENMANUS_ENABLE_PYTHON_EXECUTION": "0"}):
             enabled = configure_agent_tools(agent)
         self.assertFalse(enabled)
         self.assertNotIn("python_execute", agent.available_tools.tool_map)
         self.assertIn("str_replace_editor", agent.available_tools.tool_map)
 
     def test_python_tool_requires_explicit_runtime_opt_in(self):
-
         class FakeTool:
             def __init__(self, name):
                 self.name = name
@@ -147,9 +142,7 @@ class TestPrometheusRuntimeContext(unittest.TestCase):
             )
 
         agent = FakeAgent()
-        with patch.dict(
-            "os.environ", {"OPENMANUS_ENABLE_PYTHON_EXECUTION": "1"}
-        ):
+        with patch.dict("os.environ", {"OPENMANUS_ENABLE_PYTHON_EXECUTION": "1"}):
             enabled = configure_agent_tools(agent)
         self.assertTrue(enabled)
         self.assertIn("python_execute", agent.available_tools.tool_map)
