@@ -51,7 +51,7 @@ Example request:
 }
 ```
 
-Skill and UI context is source-attributed, size-limited, and passed as supplemental reference material. Set `kind` to `skill` or `ui` for each item. It is not allowed to override the base agent's system policy or tool/security boundaries. The runtime does not install or import overlay code.
+Skill and UI context is source-attributed, size-limited, and passed as supplemental reference material. Set `kind` to `skill` or `ui` for each item. It is not allowed to override the base agent's system policy or tool/security boundaries. The runtime recomputes each Git blob SHA before accepting its content, and places repository material in a user-role reference message rather than elevating it into the base system prompt. The runtime does not install or import overlay code.
 
 The response identifies `runtime: openmanus` and reports the number of skill documents loaded. The runtime enforces a 12-step cap and a request timeout.
 
