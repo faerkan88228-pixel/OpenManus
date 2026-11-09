@@ -8,6 +8,7 @@ from app.prometheus_runtime import (
     RunRequest,
     RuntimeSkillContext,
     render_skill_context,
+    configure_agent_tools,
 )
 
 
@@ -31,6 +32,16 @@ class TestPrometheusRuntimeContext(unittest.TestCase):
         self.assertIn(context.source_sha, rendered)
         self.assertIn("UNTRUSTED REPOSITORY CONTENT", rendered)
         self.assertIn(content, rendered)
+
+    def test_rejects_github_url_with_embedded_credentials(self):
+        content = "Do something"
+        with self.assertRaises(ValidationError):
+            RuntimeSkillContext(
+                name="Credential URL",
+                source_url="https://user:secret@github.com/example/repo/blob/main/SKILL.md",
+                source_sha=git_blob_sha1(content),
+                content=content,
+            )
 
     def test_rejects_non_github_source(self):
         content = "Do something"
@@ -95,6 +106,44 @@ class TestPrometheusRuntimeContext(unittest.TestCase):
 
     def test_daytona_credentials_are_optional_without_daytona(self):
         self.assertEqual(DaytonaSettings().daytona_api_key, "")
+
+
+    def test_unsandboxed_python_tool_is_disabled_by_default(self):
+        from unittest.mock import patch
+        from app.tool import ToolCollection
+
+        class FakeTool:
+            def __init__(self, name):
+                self.name = name
+
+        class FakeAgent:
+            available_tools = ToolCollection(
+                FakeTool("python_execute"),
+                FakeTool("str_replace_editor"),
+                FakeTool("terminate"),
+            )
+
+        with patch.dict("os.environ", {"OPENMANUS_ENABLE_PYTHON_EXECUTION": "0"}):
+            enabled = configure_agent_tools(FakeAgent())
+        self.assertFalse(enabled)
+        self.assertNotIn("python_execute", FakeAgent.available_tools.tool_map)
+        self.assertIn("str_replace_editor", FakeAgent.available_tools.tool_map)
+
+    def test_python_tool_requires_explicit_runtime_opt_in(self):
+        from unittest.mock import patch
+        from app.tool import ToolCollection
+
+        class FakeTool:
+            def __init__(self, name):
+                self.name = name
+
+        class FakeAgent:
+            available_tools = ToolCollection(FakeTool("python_execute"), FakeTool("terminate"))
+
+        with patch.dict("os.environ", {"OPENMANUS_ENABLE_PYTHON_EXECUTION": "1"}):
+            enabled = configure_agent_tools(FakeAgent())
+        self.assertTrue(enabled)
+        self.assertIn("python_execute", FakeAgent.available_tools.tool_map)
 
 
 if __name__ == "__main__":
