@@ -47,7 +47,9 @@ class TestPrometheusRuntimeContext(unittest.TestCase):
         contexts = [
             RuntimeSkillContext(
                 name=f"Skill {index}",
-                source_url=f"https://github.com/example/repo/blob/main/skills/{index}/SKILL.md",
+                source_url=(
+                    f"https://github.com/example/repo/blob/main/skills/{index}/SKILL.md"
+                ),
                 source_sha=f"{index:040x}",
                 content="x",
             )
