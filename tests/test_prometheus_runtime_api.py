@@ -53,7 +53,9 @@ class TestPrometheusRuntimeAPI(unittest.TestCase):
         skill_content = "Inspect the repository structure before proposing changes."
         skill = {
             "name": "Repository Analyst",
-            "source_url": "https://github.com/example/repo/blob/main/skills/repo/SKILL.md",
+            "source_url": (
+                "https://github.com/example/repo/blob/main/skills/repo/SKILL.md"
+            ),
             "source_sha": git_blob_sha1(skill_content),
             "content": skill_content,
         }
@@ -73,7 +75,9 @@ class TestPrometheusRuntimeAPI(unittest.TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.json()["runtime"], "openmanus")
         self.assertEqual(response.json()["skills_loaded"], 1)
-        self.assertIn("repository reference content", fake_agent.system_prompt.lower())
+        self.assertIn(
+            "repository reference content", fake_agent.system_prompt.lower()
+        )
         self.assertEqual(len(fake_agent.memory.messages), 1)
         self.assertEqual(fake_agent.memory.messages[0].role, "user")
         self.assertIn(skill_content, fake_agent.memory.messages[0].content)
