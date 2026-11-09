@@ -1,5 +1,6 @@
 import hashlib
 import unittest
+from unittest.mock import patch
 
 from pydantic import ValidationError
 
@@ -7,9 +8,10 @@ from app.config import DaytonaSettings
 from app.prometheus_runtime import (
     RunRequest,
     RuntimeSkillContext,
-    render_skill_context,
     configure_agent_tools,
+    render_skill_context,
 )
+from app.tool import ToolCollection
 
 
 def git_blob_sha1(content: str) -> str:
@@ -109,8 +111,6 @@ class TestPrometheusRuntimeContext(unittest.TestCase):
 
 
     def test_unsandboxed_python_tool_is_disabled_by_default(self):
-        from unittest.mock import patch
-        from app.tool import ToolCollection
 
         class FakeTool:
             def __init__(self, name):
@@ -131,15 +131,16 @@ class TestPrometheusRuntimeContext(unittest.TestCase):
         self.assertIn("str_replace_editor", agent.available_tools.tool_map)
 
     def test_python_tool_requires_explicit_runtime_opt_in(self):
-        from unittest.mock import patch
-        from app.tool import ToolCollection
 
         class FakeTool:
             def __init__(self, name):
                 self.name = name
 
         class FakeAgent:
-            available_tools = ToolCollection(FakeTool("python_execute"), FakeTool("terminate"))
+            available_tools = ToolCollection(
+                FakeTool("python_execute"),
+                FakeTool("terminate"),
+            )
 
         agent = FakeAgent()
         with patch.dict("os.environ", {"OPENMANUS_ENABLE_PYTHON_EXECUTION": "1"}):
