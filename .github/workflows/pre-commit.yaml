@@ -24,3 +24,6 @@ jobs:
           pip install pre-commit black==23.1.0 isort==5.12.0 autoflake==2.0.1
       - name: Run pre-commit hooks
         run: pre-commit run --all-files
+      - name: Show formatter diff
+        if: always()
+        run: git diff -- app/prometheus_runtime.py tests/test_prometheus_runtime.py tests/test_prometheus_runtime_api.py
