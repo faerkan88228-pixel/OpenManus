@@ -55,6 +55,18 @@ class TestPrometheusRuntimeContext(unittest.TestCase):
         with self.assertRaises(ValidationError):
             RunRequest(goal="Build an app", skill_contexts=contexts)
 
+    def test_ui_module_context_is_distinguished_from_skill_context(self):
+        context = RuntimeSkillContext(
+            kind="ui",
+            name="Faction Dashboard",
+            source_url="https://github.com/example/repo/blob/main/components/FactionDashboard.tsx",
+            source_sha="c" * 40,
+            content="export function FactionDashboard() { return null; }",
+        )
+        rendered = render_skill_context([context])
+        self.assertIn("UI MODULE 1: Faction Dashboard", rendered)
+        self.assertIn("UNTRUSTED REPOSITORY CONTENT", rendered)
+
     def test_empty_context_renders_empty_string(self):
         self.assertEqual(render_skill_context([]), "")
 
