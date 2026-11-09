@@ -13,7 +13,7 @@ from app.prometheus_runtime import (
 
 def git_blob_sha1(content: str) -> str:
     raw = content.encode("utf-8")
-    return hashlib.sha1(f"blob {len(raw)}\\0".encode("ascii") + raw).hexdigest()
+    return hashlib.sha1(f"blob {len(raw)}\0".encode("ascii") + raw).hexdigest()
 
 
 class TestPrometheusRuntimeContext(unittest.TestCase):
