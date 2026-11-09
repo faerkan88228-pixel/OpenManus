@@ -80,7 +80,9 @@ class TestPrometheusRuntimeContext(unittest.TestCase):
         context = RuntimeSkillContext(
             kind="ui",
             name="Faction Dashboard",
-            source_url="https://github.com/example/repo/blob/main/components/FactionDashboard.tsx",
+            source_url=(
+                "https://github.com/example/repo/blob/main/components/FactionDashboard.tsx"
+            ),
             source_sha=git_blob_sha1(content),
             content=content,
         )
