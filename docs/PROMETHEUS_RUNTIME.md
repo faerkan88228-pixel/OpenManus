@@ -51,7 +51,7 @@ Example request:
 }
 ```
 
-Skill context is source-attributed, size-limited, and passed as supplemental reference material. It is not allowed to override the base agent's system policy or tool/security boundaries. The runtime does not install or import overlay code.
+Skill and UI context is source-attributed, size-limited, and passed as supplemental reference material. Set `kind` to `skill` or `ui` for each item. It is not allowed to override the base agent's system policy or tool/security boundaries. The runtime does not install or import overlay code.
 
 The response identifies `runtime: openmanus` and reports the number of skill documents loaded. The runtime enforces a 12-step cap and a request timeout.
 
@@ -60,6 +60,6 @@ The response identifies `runtime: openmanus` and reports the number of skill doc
 - The runtime token and model credentials remain server-side.
 - Only direct HTTPS GitHub skill sources on port 443 are accepted.
 - Skill source SHA values must be Git blob SHA-1 identifiers.
-- Maximum 8 skill documents, 12,000 characters per document, and 32,000 characters total.
+- Maximum 8 skill/UI documents, 12,000 characters per document, and 32,000 characters total.
 - The original OpenManus tools remain the execution layer. Deploy in an isolated worker/container with resource limits and network egress controls appropriate to the enabled tools.
 - This HTTP adapter is not a substitute for sandbox hardening. Review and configure OpenManus sandbox settings before enabling code execution in a public multi-tenant environment.
