@@ -47,18 +47,24 @@ class TestPrometheusRuntimeAPI(unittest.TestCase):
             "source_sha": "a" * 40,
             "content": "Inspect the repository structure before proposing changes.",
         }
-        with patch("app.prometheus_runtime.Manus.create", new=AsyncMock(return_value=fake_agent)):
+        with patch(
+            "app.prometheus_runtime.Manus.create",
+            new=AsyncMock(return_value=fake_agent),
+        ):
             response = self.client.post(
                 "/v1/agent/run",
                 headers={"X-Prometheus-Runtime-Token": "test-runtime-token"},
-                json={"goal": "Review repository architecture", "skill_contexts": [skill]},
+                json={
+                    "goal": "Review repository architecture",
+                    "skill_contexts": [skill],
+                },
             )
 
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.json()["runtime"], "openmanus")
         self.assertEqual(response.json()["skills_loaded"], 1)
         self.assertIn("Repository Analyst", fake_agent.system_prompt)
-        self.assertIn("UNTRUSTED SKILL CONTENT", fake_agent.system_prompt)
+        self.assertIn("UNTRUSTED REPOSITORY CONTENT", fake_agent.system_prompt)
         fake_agent.run.assert_awaited_once_with("Review repository architecture")
 
     def test_run_rejects_non_github_skill_sources(self):
