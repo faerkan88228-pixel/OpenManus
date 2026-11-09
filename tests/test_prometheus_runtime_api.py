@@ -4,7 +4,15 @@ from unittest.mock import AsyncMock, patch
 
 from fastapi.testclient import TestClient
 
-from app.prometheus_runtime import app
+from app.prometheus_runtime import app, git_blob_sha1
+
+
+class FakeMemory:
+    def __init__(self):
+        self.messages = []
+
+    def add_message(self, message):
+        self.messages.append(message)
 
 
 class FakeManus:
@@ -12,6 +20,7 @@ class FakeManus:
         self.system_prompt = "OpenManus base policy"
         self.max_steps = 20
         self._initialized = False
+        self.memory = FakeMemory()
         self.run = AsyncMock(return_value="OpenManus completed the task.")
 
 
@@ -39,13 +48,14 @@ class TestPrometheusRuntimeAPI(unittest.TestCase):
         )
         self.assertEqual(response.status_code, 401)
 
-    def test_run_calls_openmanus_and_loads_reviewed_skill_context(self):
+    def test_run_calls_openmanus_and_loads_reviewed_skill_context_as_user_data(self):
         fake_agent = FakeManus()
+        skill_content = "Inspect the repository structure before proposing changes."
         skill = {
             "name": "Repository Analyst",
             "source_url": "https://github.com/example/repo/blob/main/skills/repo/SKILL.md",
-            "source_sha": "a" * 40,
-            "content": "Inspect the repository structure before proposing changes.",
+            "source_sha": git_blob_sha1(skill_content),
+            "content": skill_content,
         }
         with patch(
             "app.prometheus_runtime.Manus.create",
@@ -63,16 +73,19 @@ class TestPrometheusRuntimeAPI(unittest.TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.json()["runtime"], "openmanus")
         self.assertEqual(response.json()["skills_loaded"], 1)
-        self.assertIn("Repository Analyst", fake_agent.system_prompt)
-        self.assertIn("UNTRUSTED REPOSITORY CONTENT", fake_agent.system_prompt)
+        self.assertIn("repository reference content", fake_agent.system_prompt.lower())
+        self.assertEqual(len(fake_agent.memory.messages), 1)
+        self.assertEqual(fake_agent.memory.messages[0].role, "user")
+        self.assertIn(skill_content, fake_agent.memory.messages[0].content)
         fake_agent.run.assert_awaited_once_with("Review repository architecture")
 
     def test_run_rejects_non_github_skill_sources(self):
+        skill_content = "Do something."
         skill = {
             "name": "External Skill",
             "source_url": "https://example.com/SKILL.md",
-            "source_sha": "b" * 40,
-            "content": "Do something.",
+            "source_sha": git_blob_sha1(skill_content),
+            "content": skill_content,
         }
         response = self.client.post(
             "/v1/agent/run",
