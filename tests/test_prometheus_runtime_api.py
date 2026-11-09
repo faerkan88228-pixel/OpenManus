@@ -5,6 +5,7 @@ from unittest.mock import AsyncMock, patch
 from fastapi.testclient import TestClient
 
 from app.prometheus_runtime import app, git_blob_sha1
+from app.tool import ToolCollection
 
 
 class FakeMemory:
@@ -21,6 +22,7 @@ class FakeManus:
         self.max_steps = 20
         self._initialized = False
         self.memory = FakeMemory()
+        self.available_tools = ToolCollection()
         self.run = AsyncMock(return_value="OpenManus completed the task.")
 
 
@@ -75,6 +77,7 @@ class TestPrometheusRuntimeAPI(unittest.TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.json()["runtime"], "openmanus")
         self.assertEqual(response.json()["skills_loaded"], 1)
+        self.assertFalse(response.json()["python_execution_enabled"])
         self.assertIn(
             "repository reference content", fake_agent.system_prompt.lower()
         )
