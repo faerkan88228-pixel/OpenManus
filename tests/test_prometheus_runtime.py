@@ -123,11 +123,12 @@ class TestPrometheusRuntimeContext(unittest.TestCase):
                 FakeTool("terminate"),
             )
 
+        agent = FakeAgent()
         with patch.dict("os.environ", {"OPENMANUS_ENABLE_PYTHON_EXECUTION": "0"}):
-            enabled = configure_agent_tools(FakeAgent())
+            enabled = configure_agent_tools(agent)
         self.assertFalse(enabled)
-        self.assertNotIn("python_execute", FakeAgent.available_tools.tool_map)
-        self.assertIn("str_replace_editor", FakeAgent.available_tools.tool_map)
+        self.assertNotIn("python_execute", agent.available_tools.tool_map)
+        self.assertIn("str_replace_editor", agent.available_tools.tool_map)
 
     def test_python_tool_requires_explicit_runtime_opt_in(self):
         from unittest.mock import patch
@@ -140,10 +141,11 @@ class TestPrometheusRuntimeContext(unittest.TestCase):
         class FakeAgent:
             available_tools = ToolCollection(FakeTool("python_execute"), FakeTool("terminate"))
 
+        agent = FakeAgent()
         with patch.dict("os.environ", {"OPENMANUS_ENABLE_PYTHON_EXECUTION": "1"}):
-            enabled = configure_agent_tools(FakeAgent())
+            enabled = configure_agent_tools(agent)
         self.assertTrue(enabled)
-        self.assertIn("python_execute", FakeAgent.available_tools.tool_map)
+        self.assertIn("python_execute", agent.available_tools.tool_map)
 
 
 if __name__ == "__main__":
