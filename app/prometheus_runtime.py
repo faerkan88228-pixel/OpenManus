@@ -20,6 +20,7 @@ from app.agent.manus import Manus
 from app.schema import Message
 from app.tool import ToolCollection
 
+
 MAX_SKILLS = 8
 MAX_SKILL_CHARS = 12_000
 MAX_TOTAL_SKILL_CHARS = 32_000
@@ -169,9 +170,8 @@ def create_app() -> FastAPI:
     @service.post("/v1/agent/run")
     async def run_agent(
         request: RunRequest,
-        x_prometheus_runtime_token: str | None = Header(
-            default=None, alias="X-Prometheus-Runtime-Token"
-        ),
+        x_prometheus_runtime_token: str
+        | None = Header(default=None, alias="X-Prometheus-Runtime-Token"),
     ) -> dict[str, Any]:
         _authorize_runtime(x_prometheus_runtime_token)
         agent: Manus | None = None
@@ -183,9 +183,7 @@ def create_app() -> FastAPI:
             skill_context = render_skill_context(request.skill_contexts)
             if skill_context:
                 agent.system_prompt = (
-                    (agent.system_prompt or "")
-                    + "\n\n"
-                    + OVERLAY_REFERENCE_POLICY
+                    (agent.system_prompt or "") + "\n\n" + OVERLAY_REFERENCE_POLICY
                 )
                 agent.memory.add_message(
                     Message.user_message(
