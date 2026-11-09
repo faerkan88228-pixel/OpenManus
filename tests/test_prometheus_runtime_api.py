@@ -78,9 +78,7 @@ class TestPrometheusRuntimeAPI(unittest.TestCase):
         self.assertEqual(response.json()["runtime"], "openmanus")
         self.assertEqual(response.json()["skills_loaded"], 1)
         self.assertFalse(response.json()["python_execution_enabled"])
-        self.assertIn(
-            "repository reference content", fake_agent.system_prompt.lower()
-        )
+        self.assertIn("repository reference content", fake_agent.system_prompt.lower())
         self.assertEqual(len(fake_agent.memory.messages), 1)
         self.assertEqual(fake_agent.memory.messages[0].role, "user")
         self.assertIn(skill_content, fake_agent.memory.messages[0].content)
