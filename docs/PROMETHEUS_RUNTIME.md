@@ -9,7 +9,7 @@ Use Python 3.12 and install this repository's `requirements.txt`. Provide a real
 Set:
 
 - `PROMETHEUS_RUNTIME_TOKEN`: long random server-to-server bearer secret.
-- `OPENMANUS_DISABLE_BROWSER_USE=1`: optional, if Browser Use CLI is not installed/configured.
+OpenManus MCP servers remain governed by the base OpenManus configuration; keep them disabled unless the required server commands and permissions are deliberately configured.
 - Any provider-specific environment needed by your deployment. OpenManus reads its model settings from `config/config.toml`.
 
 Start the internal service:
