@@ -40,7 +40,9 @@ class TestPrometheusRuntimeContext(unittest.TestCase):
         with self.assertRaises(ValidationError):
             RuntimeSkillContext(
                 name="Credential URL",
-                source_url="https://user:secret@github.com/example/repo/blob/main/SKILL.md",
+                source_url=(
+                    "https://user:secret@github.com/example/repo/blob/main/SKILL.md"
+                ),
                 source_sha=git_blob_sha1(content),
                 content=content,
             )
@@ -124,7 +126,9 @@ class TestPrometheusRuntimeContext(unittest.TestCase):
             )
 
         agent = FakeAgent()
-        with patch.dict("os.environ", {"OPENMANUS_ENABLE_PYTHON_EXECUTION": "0"}):
+        with patch.dict(
+            "os.environ", {"OPENMANUS_ENABLE_PYTHON_EXECUTION": "0"}
+        ):
             enabled = configure_agent_tools(agent)
         self.assertFalse(enabled)
         self.assertNotIn("python_execute", agent.available_tools.tool_map)
@@ -143,7 +147,9 @@ class TestPrometheusRuntimeContext(unittest.TestCase):
             )
 
         agent = FakeAgent()
-        with patch.dict("os.environ", {"OPENMANUS_ENABLE_PYTHON_EXECUTION": "1"}):
+        with patch.dict(
+            "os.environ", {"OPENMANUS_ENABLE_PYTHON_EXECUTION": "1"}
+        ):
             enabled = configure_agent_tools(agent)
         self.assertTrue(enabled)
         self.assertIn("python_execute", agent.available_tools.tool_map)
