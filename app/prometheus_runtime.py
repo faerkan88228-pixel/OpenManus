@@ -18,6 +18,7 @@ from pydantic import BaseModel, Field, field_validator, model_validator
 
 from app.agent.manus import Manus
 from app.schema import Message
+from app.tool import ToolCollection
 
 MAX_SKILLS = 8
 MAX_SKILL_CHARS = 12_000
@@ -56,6 +57,10 @@ class RuntimeSkillContext(BaseModel):
             or parsed.port not in {None, 443}
             or parsed.query
             or parsed.fragment
+            or parsed.username
+            or parsed.password
+            or len([part for part in parsed.path.split("/") if part]) < 5
+            or [part for part in parsed.path.split("/") if part][2] != "blob"
         ):
             raise ValueError(
                 "Skill source must be a direct HTTPS GitHub URL on port 443."
@@ -94,6 +99,21 @@ class RunRequest(BaseModel):
                 f"Combined skill context exceeds {MAX_TOTAL_SKILL_CHARS} characters."
             )
         return value
+
+
+def configure_agent_tools(agent: Manus) -> bool:
+    """Disable OpenManus' in-process Python exec tool unless explicitly opted in."""
+    enabled = os.getenv("OPENMANUS_ENABLE_PYTHON_EXECUTION", "").lower() in {
+        "1",
+        "true",
+        "yes",
+    }
+    if enabled:
+        return True
+    agent.available_tools = ToolCollection(
+        *(tool for tool in agent.available_tools.tools if tool.name != "python_execute")
+    )
+    return False
 
 
 def render_skill_context(contexts: list[RuntimeSkillContext]) -> str:
@@ -153,8 +173,10 @@ def create_app() -> FastAPI:
     ) -> dict[str, Any]:
         _authorize_runtime(x_prometheus_runtime_token)
         agent: Manus | None = None
+        python_execution_enabled = False
         try:
             agent = await Manus.create()
+            python_execution_enabled = configure_agent_tools(agent)
             agent.max_steps = MAX_STEPS
             skill_context = render_skill_context(request.skill_contexts)
             if skill_context:
@@ -180,6 +202,7 @@ def create_app() -> FastAPI:
                 "output": output,
                 "steps_limit": MAX_STEPS,
                 "skills_loaded": len(request.skill_contexts),
+                "python_execution_enabled": python_execution_enabled,
             }
         except asyncio.TimeoutError:
             raise HTTPException(
