@@ -51,6 +51,7 @@ class RuntimeSkillContext(BaseModel):
     @classmethod
     def validate_source_url(cls, value: str) -> str:
         parsed = urlparse(value)
+        path_parts = [part for part in parsed.path.split("/") if part]
         if (
             parsed.scheme != "https"
             or parsed.hostname not in {"github.com", "www.github.com"}
@@ -59,8 +60,8 @@ class RuntimeSkillContext(BaseModel):
             or parsed.fragment
             or parsed.username
             or parsed.password
-            or len([part for part in parsed.path.split("/") if part]) < 5
-            or [part for part in parsed.path.split("/") if part][2] != "blob"
+            or len(path_parts) < 5
+            or path_parts[2] != "blob"
         ):
             raise ValueError(
                 "Skill source must be a direct HTTPS GitHub URL on port 443."
@@ -110,9 +111,10 @@ def configure_agent_tools(agent: Manus) -> bool:
     }
     if enabled:
         return True
-    agent.available_tools = ToolCollection(
-        *(tool for tool in agent.available_tools.tools if tool.name != "python_execute")
-    )
+    safe_tools = [
+        tool for tool in agent.available_tools.tools if tool.name != "python_execute"
+    ]
+    agent.available_tools = ToolCollection(*safe_tools)
     return False
 
 
