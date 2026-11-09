@@ -2,9 +2,10 @@ import unittest
 
 from pydantic import ValidationError
 
+from app.config import DaytonaSettings
 from app.prometheus_runtime import (
-    RuntimeSkillContext,
     RunRequest,
+    RuntimeSkillContext,
     render_skill_context,
 )
 
@@ -21,7 +22,7 @@ class TestPrometheusRuntimeContext(unittest.TestCase):
         self.assertIn("Responsive UI", rendered)
         self.assertIn(context.source_url, rendered)
         self.assertIn(context.source_sha, rendered)
-        self.assertIn("UNTRUSTED SKILL CONTENT", rendered)
+        self.assertIn("UNTRUSTED REPOSITORY CONTENT", rendered)
         self.assertIn("Use a mobile-first layout.", rendered)
 
     def test_rejects_non_github_source(self):
@@ -69,6 +70,9 @@ class TestPrometheusRuntimeContext(unittest.TestCase):
 
     def test_empty_context_renders_empty_string(self):
         self.assertEqual(render_skill_context([]), "")
+
+    def test_daytona_credentials_are_optional_without_daytona(self):
+        self.assertEqual(DaytonaSettings().daytona_api_key, "")
 
 
 if __name__ == "__main__":
