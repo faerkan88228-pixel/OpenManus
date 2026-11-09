@@ -12,13 +12,32 @@ Set:
 OpenManus MCP servers remain governed by the base OpenManus configuration; keep them disabled unless the required server commands and permissions are deliberately configured.
 - Any provider-specific environment needed by your deployment. OpenManus reads its model settings from `config/config.toml`.
 
-Start the internal service:
+Build the runtime image:
 
 ```bash
-uvicorn app.prometheus_runtime:app --host 0.0.0.0 --port 8000
+docker build -f Dockerfile.prometheus-runtime -t prometheus-openmanus-runtime .
 ```
 
-Expose it only behind a TLS reverse proxy or managed HTTPS ingress on public port 443. Do not expose the internal application port directly.
+Run it in an isolated worker. Supply the real config file and token through your deployment secret manager; do not bake them into the image:
+
+```bash
+docker run --rm \
+  --read-only \
+  --cap-drop=ALL \
+  --security-opt=no-new-privileges \
+  --pids-limit=128 \
+  --memory=4g \
+  --cpus=2 \
+  --tmpfs /tmp:rw,noexec,nosuid,size=256m \
+  --tmpfs /srv/openmanus/workspace:rw,nosuid,nodev,size=1g,uid=10001,gid=10001 \
+  --tmpfs /srv/openmanus/logs:rw,nosuid,nodev,size=128m,uid=10001,gid=10001 \
+  -p 127.0.0.1:8000:8000 \
+  -v /secure/config.toml:/srv/openmanus/config/config.toml:ro \
+  -e PROMETHEUS_RUNTIME_TOKEN \
+  prometheus-openmanus-runtime
+```
+
+Expose it only behind a TLS reverse proxy or managed HTTPS ingress on public port 443. Keep the worker private; do not expose port 8000 directly. Apply outbound network restrictions to only the configured model provider and explicitly approved services.
 
 ## API
 
