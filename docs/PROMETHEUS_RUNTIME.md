@@ -61,5 +61,5 @@ The response identifies `runtime: openmanus` and reports the number of skill doc
 - Only direct HTTPS GitHub skill sources on port 443 are accepted.
 - Skill source SHA values must be Git blob SHA-1 identifiers.
 - Maximum 8 skill/UI documents, 12,000 characters per document, and 32,000 characters total.
-- The original OpenManus tools remain the execution layer. Deploy in an isolated worker/container with resource limits and network egress controls appropriate to the enabled tools.
+- The original OpenManus tools remain the execution layer. Its in-process `python_execute` tool is disabled by default; `OPENMANUS_ENABLE_PYTHON_EXECUTION=1` is an explicit opt-in and must only be used in a dedicated, isolated worker with resource limits and restricted network egress.
 - This HTTP adapter is not a substitute for sandbox hardening. Review and configure OpenManus sandbox settings before enabling code execution in a public multi-tenant environment.
