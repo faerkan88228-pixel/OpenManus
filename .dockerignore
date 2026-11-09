@@ -1,0 +1,13 @@
+.git
+.github
+.env
+.env.*
+config/config.toml
+config/mcp.json
+workspace
+logs
+__pycache__
+.pytest_cache
+.mypy_cache
+.venv
+venv
